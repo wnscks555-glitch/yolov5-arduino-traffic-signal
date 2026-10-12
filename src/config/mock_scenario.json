@@ -1,0 +1,20 @@
+{
+  "description": "Presence playback: empty regions, pedestrian demand, then an input interruption.",
+  "duration_ms": 40000,
+  "events": [
+    {
+      "at_ms": 0,
+      "presence": {}
+    },
+    {
+      "at_ms": 28000,
+      "presence": {
+        "C_ped": 1
+      }
+    },
+    {
+      "at_ms": 35000,
+      "send": false
+    }
+  ]
+}

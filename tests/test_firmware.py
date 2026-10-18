@@ -98,6 +98,36 @@ class FirmwareTests(unittest.TestCase):
         self.assertEqual(self.advance(14999)['state'],'RUNNING')
         self.assertEqual(self.advance(1)['state'],'YELLOW')
 
+    def test_late_other_demand_at_twenty_and_twenty_five_seconds(self):
+        current_fields={1:'B_st',2:'B_left',3:'C_st',4:'A_st'}
+        other_fields={
+            'vehicle':{1:'B_left',2:'C_st',3:'A_st',4:'B_st'},
+            'pedestrian':{1:'B_ped',2:'A_ped',3:'D_ped',4:'C_ped'},
+        }
+        for check_ms in (20000,25000):
+            for demand_type,fields in other_fields.items():
+                for phase in (1,2,3,4):
+                    with self.subTest(check_ms=check_ms,demand_type=demand_type,phase=phase):
+                        self.harness.close()
+                        self.harness=FirmwareHarness(PROJECT/'build/firmware_harness.exe')
+                        self.addCleanup(self.harness.close)
+                        self.frame({})
+                        for _ in range(phase-1):
+                            self.advance(7000);self.settled()
+                        self.frame({current_fields[phase]:1})
+                        self.advance(check_ms-5000)
+                        self.advance(1)
+                        self.frame({current_fields[phase]:1,fields[phase]:1})
+                        before=self.advance(4998)
+                        self.assertEqual((before['phase'],before['state']),(phase,'RUNNING'));self.assert_lights(before)
+                        start=self.advance(1)
+                        self.assertEqual((start['phase'],start['state']),(phase,'YELLOW'));self.assert_lights(start)
+                        held=self.advance(1999)
+                        self.assertEqual((held['phase'],held['state']),(phase,'YELLOW'));self.assert_lights(held)
+                        done=self.advance(1)
+                        self.assertEqual((done['phase'],done['state']),(phase%4+1,'RUNNING'))
+                        self.assert_lights(self.settled())
+
     def test_maximum_six_ticks(self):
         self.frame({'B_st':1})
         self.assertEqual(self.advance(29999)['state'],'RUNNING')

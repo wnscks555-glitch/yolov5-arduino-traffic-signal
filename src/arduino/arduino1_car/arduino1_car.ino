@@ -465,7 +465,7 @@ void loop() {
 
 
 
-             if ((count == 3 && hasNextPhaseTraffic(phase)) ||   // 3카운트일때 현재 현시 제외한, 나머지 현시에 차량or보행자 있을때 pass
+             if (((count == 3 || count == 4 || count == 5) && hasNextPhaseTraffic(phase)) ||
                ((count == 1 || count == 2 || count == 4 || count == 5) && !hasCurrentPhaseTraffic(phase))) { // 현재 현시에 차량or보행자 없을시 pass
                endPhase(phase); // 현시 종료 시 황색불 처리
             }

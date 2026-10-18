@@ -2,6 +2,48 @@
 
 웹캠으로 차량·보행자를 감지하고, 구역별 수요에 따라 모형 교차로의 신호 진행 시간을 조절하는 팀 프로젝트입니다. Python이 객체 감지와 ROI 집계를 담당하고, 두 대의 Arduino가 차량·보행자 신호를 제어합니다.
 
+## 한눈에 보는 현시 변경 알고리즘
+
+**현재 신호를 5초마다 점검해 5~30초 동안 진행하고, 종료할 때는 별도의 황색 2초를 거쳐 다음 현시로 바꿉니다.** 아래 시간은 각 현시 시작부터 누적한 시간입니다.
+
+- **현시:** 함께 통행을 허용하는 차량·보행자 신호의 묶음입니다.
+- **현재 수요:** 지금 통행 중인 현시에 해당하는 차량 또는 보행자가 감지된 상태입니다.
+- **다른 현시 수요:** 현재 현시를 제외한 나머지 현시에 해당하는 차량 또는 보행자가 감지된 상태입니다.
+
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear', 'nodeSpacing': 24, 'rankSpacing': 28}}}%%
+flowchart TD
+    START([현시 시작 · 0초]) --> T5{"5초<br/>현재 수요가 있나요?"}
+    T5 -->|있음 · 유지| T10{"10초<br/>현재 수요가 있나요?"}
+    T5 -->|없음 · 단축| YELLOW
+    T10 -->|있음 · 유지| T15{"15초<br/>다른 현시의<br/>수요가 있나요?"}
+    T10 -->|없음 · 단축| YELLOW
+    T15 -->|없음 · 연장| T20{"20초<br/>현재 수요만<br/>있나요?"}
+    T15 -->|있음 · 종료| YELLOW
+    T20 -->|예 · 연장| T25{"25초<br/>현재 수요만<br/>있나요?"}
+    T20 -->|아니요 · 종료| YELLOW
+    T25 -->|예 · 연장| T30["30초 · 최대 진행 시간<br/>수요와 관계없이 종료"]
+    T25 -->|아니요 · 종료| YELLOW
+    T30 --> YELLOW["황색 2초<br/>보행자 신호는 모두 빨강"]
+    YELLOW --> NEXT["다음 현시로 전환<br/>1 → 2 → 3 → 4 → 1"]
+    NEXT -->|시간을 0초로 초기화| START
+
+    classDef start fill:#e0f2fe,stroke:#0369a1,color:#0c4a6e,stroke-width:2px
+    classDef early fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef extension fill:#ecfdf5,stroke:#059669,color:#064e3b
+    classDef maximum fill:#fff1f2,stroke:#e11d48,color:#881337
+    classDef yellow fill:#fef3c7,stroke:#d97706,color:#78350f,stroke-width:2px
+    class START,NEXT start
+    class T5,T10 early
+    class T15,T20,T25 extension
+    class T30 maximum
+    class YELLOW yellow
+```
+
+**읽는 예:** 현재 수요가 계속 있는 중에 다른 현시 수요가 **16초에 새로 생겨 20초 검사 때도 감지되면**, **20초 검사에서 종료 → 황색 2초 → 다음 현시**로 진행합니다. 다른 수요가 계속 없고 현재 수요만 있으면 30초까지 연장됩니다.
+
+‘현재 수요만 있음’은 현재 수요가 있고 다른 현시 수요는 없는 상태입니다. 15초에는 다른 현시 수요만 검사합니다. 20·25초에는 현재 수요가 없거나 다른 현시 수요가 있으면 종료하며, 수요가 없는 현시도 순서대로 진행합니다.
+
 ## 시연 영상 — 1현시 최단시간, 최장시간
 - [1현시 최단시간 시연](https://youtu.be/1d8LZPIG-BQ)
 - [1현시 최단시간 시연2](https://youtu.be/yXnlkb6caIc)

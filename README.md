@@ -13,8 +13,8 @@
 ```mermaid
 %%{init: {'flowchart': {'curve': 'linear', 'nodeSpacing': 24, 'rankSpacing': 28}}}%%
 flowchart TD
-    START([현시 시작 · 0초]) --> T5{"5초<br/>현재 수요가 있나요?"}
-    T5 -->|있음 · 유지| T10{"10초<br/>현재 수요가 있나요?"}
+    START([현시 시작 · 0초]) --> T5{"5초<br/>현재 수요가<br/>있나요?"}
+    T5 -->|있음 · 유지| T10{"10초<br/>현재 수요가<br/>있나요?"}
     T5 -->|없음 · 단축| YELLOW
     T10 -->|있음 · 유지| T15{"15초<br/>다른 현시의<br/>수요가 있나요?"}
     T10 -->|없음 · 단축| YELLOW
